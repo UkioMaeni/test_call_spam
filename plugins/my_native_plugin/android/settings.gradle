@@ -1,0 +1,10 @@
+rootProject.name = 'my_native_plugin'
+
+pluginManagement {
+    repositories {
+        google()              // ← здесь появилось Google Maven
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
