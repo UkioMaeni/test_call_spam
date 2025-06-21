@@ -35,8 +35,8 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.yourcompany.my_native_plugin
-        pluginClass: MyNativePlugin
+        package: com.stopscam.antispam_plugin
+        pluginClass: AntispamPlugin
       ios:
         pluginClass: MyNativePlugin
 

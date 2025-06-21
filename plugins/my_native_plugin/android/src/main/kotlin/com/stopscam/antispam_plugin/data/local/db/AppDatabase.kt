@@ -1,15 +1,16 @@
-package com.yourcompany.my_native_plugin
+package com.stopscam.antispam_plugin.db
 
 import android.content.Context
 import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.stopscam.antispam_plugin.data.local.dao.SpamDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 @Database(
-    entities = [SpamNumber::class, SpamCustomNumber::class],
-    version = 4,
+    entities = [SpamNumber::class, SpamCustomNumber::class,AllowNumber::class],
+    version = 6,
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -48,11 +49,30 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("PRAGMA auto_vacuum = INCREMENTAL;")
             }
         }
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `AllowNumber` (
+                        `number` TEXT NOT NULL,
+                        `description` TEXT NOT NULL,
+                        PRIMARY KEY(`number`)
+                    )
+                """.trimIndent())
+            }
+        }
 
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    ALTER TABLE SpamCustomNumber
+                    ADD COLUMN setBlocked INTEGER NOT NULL DEFAULT 1
+                """.trimIndent())
+            }
+        }
         fun getInstance(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(context, AppDatabase::class.java, "spam_db")
-                    .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4,MIGRATION_4_5,MIGRATION_5_6)
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)

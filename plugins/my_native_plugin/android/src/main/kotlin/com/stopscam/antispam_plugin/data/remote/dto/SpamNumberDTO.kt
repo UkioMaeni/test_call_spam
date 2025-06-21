@@ -1,4 +1,4 @@
-package com.yourcompany.my_native_plugin
+package com.stopscam.antispam_plugin.dto
 
 import androidx.annotation.Keep
 

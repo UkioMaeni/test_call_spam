@@ -24,3 +24,7 @@ plugins {
 }
 
 include ":app"
+
+include(":my_native_plugin")
+project(":my_native_plugin").projectDir =
+        new File(settingsDir, "../plugins/my_native_plugin/android")

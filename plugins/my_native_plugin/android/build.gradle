@@ -1,10 +1,11 @@
 plugins {
-    id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.kapt'
-    id 'androidx.room' version '2.7.0' 
+    id 'com.android.library' version '8.4.0'
+    id 'org.jetbrains.kotlin.android' version '1.9.24'
+    id 'org.jetbrains.kotlin.kapt' version '1.9.24'
+    id 'androidx.room' version '2.7.0'
+    id "dev.flutter.flutter-gradle-plugin"
 }
-group 'com.yourcompany.my_native_plugin'
+group 'com.stopscam.antispam_plugin'
 version '1.0-SNAPSHOT'
 // buildscript {
 //     ext.kotlin_version = '1.9.24'
@@ -33,7 +34,7 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 android {
-    namespace 'com.yourcompany.my_native_plugin'
+    namespace 'com.stopscam.antispam_plugin'
     // if (project.android.hasProperty("namespace")) {
     //     namespace 'com.yourcompany.my_native_plugin'
     // }
@@ -75,7 +76,6 @@ android {
 }
 
 dependencies {
-        
         testImplementation 'org.jetbrains.kotlin:kotlin-test'
         testImplementation 'org.mockito:mockito-core:5.0.0'
         kapt "androidx.room:room-compiler:2.7.0"

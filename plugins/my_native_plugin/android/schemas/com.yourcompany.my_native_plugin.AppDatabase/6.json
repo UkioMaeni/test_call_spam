@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 4,
-    "identityHash": "ec12b21ffad4978e5537412640d96013",
+    "version": 6,
+    "identityHash": "7fb5dfb9517ffaec3d7137c90db16e87",
     "entities": [
       {
         "tableName": "SpamNumber",
@@ -36,7 +36,7 @@
       },
       {
         "tableName": "SpamCustomNumber",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`number` TEXT NOT NULL, `description` TEXT NOT NULL, PRIMARY KEY(`number`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`number` TEXT NOT NULL, `description` TEXT NOT NULL, `setBlocked` INTEGER NOT NULL, PRIMARY KEY(`number`))",
         "fields": [
           {
             "fieldPath": "number",
@@ -48,6 +48,12 @@
             "fieldPath": "description",
             "columnName": "description",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "setBlocked",
+            "columnName": "setBlocked",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -85,7 +91,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ec12b21ffad4978e5537412640d96013')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7fb5dfb9517ffaec3d7137c90db16e87')"
     ]
   }
 }

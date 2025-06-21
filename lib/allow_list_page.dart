@@ -7,23 +7,23 @@ import 'package:my_native_plugin/models/spam_number.dart';
 import 'package:test_call_spam/new_contact.dart';
 import 'package:test_call_spam/service/spam_service.dart';
 
-class CallPage extends StatefulWidget {
-  const CallPage({super.key});
+class AllowListPage extends StatefulWidget {
+  const AllowListPage({super.key});
 
   @override
-  State<CallPage> createState() => _CallPageState();
+  State<AllowListPage> createState() => _AllowListPageState();
 }
 
-class _CallPageState extends State<CallPage> {
+class _AllowListPageState extends State<AllowListPage> {
 
   SpamService spamService = SpamService();
 
-    List<SpamNumber>? customSpams;
+    List<SpamNumber>? allowNumbers;
 
-    Future<void> getAllCustomNumbers()async{
-      final numbers= await spamService.getAllScumCustomNumbers();
+    Future<void> getAllowNumbers()async{
+      final numbers= await spamService.getAllow();
       log(numbers.length.toString());
-      customSpams=numbers;
+      allowNumbers=numbers;
       setState(() {
         
       });
@@ -31,14 +31,14 @@ class _CallPageState extends State<CallPage> {
 
     @override
     void initState(){
-      getAllCustomNumbers();
+      getAllowNumbers();
       super.initState();
     }
 
   Future<void> deleteItem(SpamNumber number)async{
-    final result =  await spamService.deleteCustomNumbersByNumber(number);
+    final result =  await spamService.deleteAllow(number.number);
     if(result){
-      getAllCustomNumbers();
+      getAllowNumbers();
     }
   }
 
@@ -47,7 +47,7 @@ class _CallPageState extends State<CallPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-                'Your contacts',
+                'Allow list',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -62,7 +62,7 @@ class _CallPageState extends State<CallPage> {
             
             Builder(
               builder: (context) {
-                if(customSpams==null){
+                if(allowNumbers==null){
                   return Center(child: CircularProgressIndicator(),);
                 }
                 return Expanded(
@@ -71,11 +71,11 @@ class _CallPageState extends State<CallPage> {
                       Expanded(
                         child: Builder(
                           builder: (context) {
-                            if(customSpams!.isEmpty){
+                            if(allowNumbers!.isEmpty){
                               return Image.asset("assets/people.png");
                             }
                             return ListView.builder(
-                              itemCount:customSpams!.length ,
+                              itemCount:allowNumbers!.length ,
                               itemBuilder: (context, index) {
                                 return Container(
                                   height: 40,
@@ -88,13 +88,13 @@ class _CallPageState extends State<CallPage> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        "${customSpams![index].number} : ${customSpams![index].description}",
+                                        "${allowNumbers![index].number} : ${allowNumbers![index].description}",
                                         style: TextStyle(
                                           fontSize: 18
                                         ),
                                       ),
                                       GestureDetector(
-                                        onTap: ()=>deleteItem(customSpams![index]),
+                                        onTap: ()=>deleteItem(allowNumbers![index]),
                                         child: Container(
                                           height: 40,
                                           width: 50,
@@ -112,7 +112,7 @@ class _CallPageState extends State<CallPage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(context,MaterialPageRoute(builder: (context) => NewContact(onChange: getAllCustomNumbers,),));
+                          Navigator.push(context,MaterialPageRoute(builder: (context) => NewContact(onChange: getAllowNumbers,type: NewContactType.allow,),));
                         },
                         child: Container(
                           height: 80,
@@ -129,10 +129,6 @@ class _CallPageState extends State<CallPage> {
                     ],
                   ),
                 );
-                if(customSpams!.isEmpty){
-                  Image.asset("assets/people.png");
-                }
-                return Image.asset("assets/people.png");
               },
             ),
 

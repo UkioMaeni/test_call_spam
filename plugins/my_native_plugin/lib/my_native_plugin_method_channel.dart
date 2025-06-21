@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:my_native_plugin/models/jurnal_number.dart';
 import 'package:my_native_plugin/models/spam_number.dart';
 
 import 'my_native_plugin_platform_interface.dart';
@@ -100,9 +101,52 @@ class MethodChannelMyNativePlugin extends MyNativePluginPlatform {
     return result;
   }
   @override
-  Future<bool?> getCallLog() async{
-    final result = await methodChannel.invokeMethod<dynamic>('getCallLog');
+  Future<List<JurnalNumber>> getCallLog() async{
+    final result = await methodChannel.invokeMethod<List<dynamic>>('getCallLog')??[];
+    List<JurnalNumber> jurnal = result.map((lemente) => JurnalNumber(number: lemente["number"],type:JurnalNumber.parseTypeFromInt(lemente["type"])),).toList();
     log(result.toString());
-    return true;
+    return jurnal;
+  }
+  @override
+  Future<String?> getDescriptionFromAllScam(String number) async{
+    final result = await methodChannel.invokeMethod<String>('getDescriptionFromAllScam',{
+      "number":number
+    });
+    log(result.toString());
+    return result;
+  }
+  @override
+  Future<bool?> updateDbISRunning() async{
+    final result = await methodChannel.invokeMethod<bool>('updateDbISRunning');
+    return result;
+  }
+  @override
+  Future<bool?> insertAllow(SpamNumber spamNumber)async{
+    final result = await methodChannel.invokeMethod<bool>('insertAllow',{"number":spamNumber.toMap()});
+    return result;
+  }
+  @override
+  Future<bool?> deleteAllow(String number)async{
+    final result = await methodChannel.invokeMethod<bool>('deleteAllow',{"number":number});
+    return result;
+  }
+  @override
+  Future<List<Map<String,dynamic>>?> getAllow()async{
+    final result = await methodChannel.invokeMethod<List<dynamic>>('getAllow',);
+    if(result==null){
+      return null;
+    }
+
+    log("getAllow");
+    log(result.toString());
+    List<Map<String,dynamic>> returnedList=[]; 
+    for(var res in result){
+      if(res is Map){
+        returnedList.add({"number":res["number"],"description":res["description"]});
+      }
+    }
+    log("selectDatabaseCustomNumbersREt");
+    log(returnedList.toString());
+    return returnedList;
   }
 }

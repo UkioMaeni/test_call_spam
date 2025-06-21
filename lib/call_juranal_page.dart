@@ -2,10 +2,15 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:my_native_plugin/models/jurnal_number.dart';
 import 'package:my_native_plugin/models/spam_number.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:test_call_spam/dialogs/info_spam_allow_dialog.dart';
 import 'package:test_call_spam/new_contact.dart';
 import 'package:test_call_spam/service/spam_service.dart';
 
@@ -48,16 +53,20 @@ class _CallJurnalPageState extends State<CallJurnalPage> {
     });
   }
 
-  
+  List<JurnalNumber> jurnal = [];
 
   loadContacts()async{
-    await spamService.getCallLog();
+   jurnal= await spamService.getCallLog();
+  setState(() {
+    
+  });
   }
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromRGBO(249, 250, 254, 1),
       appBar: AppBar(
         title: Text(
                 'CallJurnalPage',
@@ -70,36 +79,75 @@ class _CallJurnalPageState extends State<CallJurnalPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          children: [
-            
-            Builder(
-              builder: (context) {
-                if(!granted){
-                  return Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Нет прав"),
-                        SizedBox(height: 10,),
-                        GestureDetector(
-                          onTap: phonePermissionCheck,
-                          child: Container(
-                            height: 50,
-                            width: 40,
-                            color: Colors.blueAccent,
-                            child: Text("запросить"),
+        child: Builder(
+          builder: (context) {
+            if(!granted){
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Нет прав"),
+                  SizedBox(height: 10,),
+                  GestureDetector(
+                    onTap: phonePermissionCheck,
+                    child: Container(
+                      height: 50,
+                      width: 40,
+                      color: Colors.blueAccent,
+                      child: Text("запросить"),
+                    ),
+                  )
+                ],
+              );
+            }
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: ColoredBox(
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    Container(
+                      height: 44,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 62,
+                            alignment: Alignment.center,
+                            child: Text("(***)")
                           ),
-                        )
-                      ],
-                    )
-                  );
-                }
-                return Image.asset("assets/people.png");
-              },
-            ),
-
-          ],
+                          Container(
+                            width: 140,
+                            alignment: Alignment.centerLeft,
+                            child: Text("NUMBER")
+                          ),
+                          Expanded(
+                            child: Container(
+                              width: 131,
+                              alignment: Alignment.centerLeft,
+                              child: Text("LABEL")
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(color: Color.fromRGBO(234, 234, 234, 1),height: 1,),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: jurnal.length,
+                        separatorBuilder: (context, index) {
+                          return Divider(color: Color.fromRGBO(234, 234, 234, 1),height: 1,);
+                        },
+                        itemBuilder: (context, index) {
+                
+                          return NumberElement(jurnalNumber: jurnal[index],);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+            return Image.asset("assets/people.png");
+          },
         ),
       ),
     );
@@ -107,161 +155,256 @@ class _CallJurnalPageState extends State<CallJurnalPage> {
 }
 
 
-class DialofDownLoad extends StatefulWidget {
-  const DialofDownLoad({super.key});
+class NumberElement extends StatefulWidget {
+  final JurnalNumber jurnalNumber;
+  const NumberElement({super.key,required this.jurnalNumber});
 
   @override
-  State<DialofDownLoad> createState() => _DialofDownLoadState();
+  State<NumberElement> createState() => _NumberElementState();
 }
 
-class _DialofDownLoadState extends State<DialofDownLoad> {
+class _NumberElementState extends State<NumberElement> {
 
   SpamService spamService = SpamService();
 
+  String? label;
 
-  String step ="load";
+  bool systemBloc = false;
 
-  int countProcess = 0;
-  int totalProcess = 1;
-  bool isReciver = false;
-
-  List<SpamNumber> numbers=[];
-
-
-  load()async{
-
-    final lastIdServer =  await spamService.countSpamNumbers();
-
-    final response =await  Dio().get(
-      "https://call.stopscam.ai/api/v1/numberRouter/number_base",
-      queryParameters: {
-        "lastId":lastIdServer
-      },
-      onReceiveProgress: (count, total) {
-        isReciver = true;
-        countProcess=count;
-        totalProcess=total;
-        log(count.toString()+"/"+total.toString());
-        setState(() {
-          
-        });
-      },
-    );
-    final data= response.data as List<dynamic>;
-    numbers = data.map((element) => SpamNumber(number: element["number"], description: element["description"],id: element["id"])).toList();
-    step="db";
+  getDataLabel()async{
+    if(widget.jurnalNumber.type==ETypeCall.blocked){
+      final result = await spamService.getDescriptionFromAllScam(widget.jurnalNumber.number);
+      if(result==null){
+        label="System block";
+        systemBloc=true;
+      }else{
+        label=result;
+      }
+    }else{
+      label="";
+    }
     setState(() {
       
     });
-    toDb();
   }
 
-  int chank = 0;
-  int totalChunk = 0;
+  late String number;
+  late ETypeCall type;
+  @override
+  void initState() {
+    number=widget.jurnalNumber.number;
+    type=widget.jurnalNumber.type;
+    getDataLabel();
+    super.initState();
+  }
 
-  toDb()async{
 
-    final batchSize = 100000;
 
-    for (int i = 0; i < numbers.length; i += batchSize) {
-    // 1) формируем срез [i, i + batchSize)
-    final chunk = numbers.sublist(
-      i,
-      i + batchSize > numbers.length ? numbers.length : i + batchSize,
-    );
 
-    // 2) вставляем и ждём завершения
-    await spamService.insertSpamNumbers(chunk);
-    
-    // 3) (опционально) показываем прогресс
-    chank=i + chunk.length;
-    totalChunk=numbers.length;
-    setState(() {
+
+  Future<void> callBack()async{
+    bool isBlocked = type==ETypeCall.blocked;
+    await showDialog(
       
-    });
-    debugPrint('Inserted ${i + chunk.length} / ${numbers.length}');
-    chunk.clear();
-  }
-  numbers.clear();
-  setState(() {
-    step="well";
-  });
+      context: context,
+      builder: (context) {
+        return InfoSpamAllowDialog(
+          number: number,
+          label: label??"not",
+          isBlocked: isBlocked,
+        );
+      },
+    );
   }
 
   @override
+  Widget build(BuildContext context) {
+     bool isBlocked = type==ETypeCall.blocked;
+     if(number.isEmpty){
+      number="Номер скрыт";
+     }
+     return HorizontalSlice(
+      enabled: label!=null && !systemBloc,
+      dissmisible: callBack,
+      maxOffset: 120,
+      action: Container(
+        height: 56,
+        color:isBlocked?Color.fromRGBO(206, 243, 221, 1): Color.fromRGBO(243, 206, 206, 1),
+        child: Center(
+          child: Text(isBlocked?"Allow":"Report",style: TextStyle(color:isBlocked?Colors.green:Colors.red),)
+        ),
+      ),
+      child: Container(
+          height: 56,
+          
+          child: Row(
+            children: [
+              Container(
+                width: 62,
+                alignment: Alignment.center,
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(13),
+                    color: isBlocked?Colors.red:Colors.green
+                  ),
+                )
+              ),
+              Container(
+                width: 140,
+                alignment: Alignment.centerLeft,
+                child: Text(number)
+              ),
+              Expanded(
+                child: Container(
+                  width: 131,
+                  alignment: Alignment.centerLeft,
+                  child: Builder(
+                    builder: (context) {
+                      if(label==null){
+                        return Skeletonizer(
+                          enabled: true,
+                          child: const Text('Subtitle here'),
+                        );
+                      }
+                      return Text(label!);
+                    },
+                  )
+                ),
+              ),
+            ],
+          ),
+        ),
+     );
+  }
+}
+
+
+
+class HorizontalSlice extends StatefulWidget {
+  final double maxOffset;
+  final Widget child;
+  final Widget action;
+  final bool enabled;
+  final Future<void> Function() dissmisible;
+  const HorizontalSlice({super.key,required this.maxOffset,required this.action,required this.child,required this.dissmisible,required this.enabled});
+
+  @override
+  State<HorizontalSlice> createState() => _HorizontalSliceState();
+}
+
+class _HorizontalSliceState extends State<HorizontalSlice> with SingleTickerProviderStateMixin {
+
+  late final AnimationController _ctrl;
+      
+  double _dragStartX = 0;
+
+  @override
   void initState() {
-    load();
+    _ctrl=AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    
-    return PopScope(
-      canPop: false,
-      child: Dialog(
-        
-        child: Container(
-          height: 400,
-          child: Column(
-            children: [
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    if(step=="load"){
-                      return Column(
-                        children: [
-                          Text("Загрузка"),
-                          Builder(
-                            builder: (context) {
-                              if(!isReciver){
-                                return Text("Предворительная загрузка");
-                              }
-                              return Column(
-                                children: [
-                                  Text((countProcess/totalProcess*100).toStringAsFixed(1)+"%"),
-                                  Text("total: " +(totalProcess/1024/1024).toString()+" Мб"),
-                                ],
-                              );
-                            },
-                          )
-                          
-                        ],
-                      );
-                    }
-                    if(step=="db"){
-                      return Column(
-                        children: [
-                          Text("Сохранение в локальную базу"),
-                          Text('Inserted ${chank} / ${totalChunk}'),
-                        ],
-                      );
-                    }
-                    if(step=="well"){
-                      return Column(
-                        children: [
-                          Text("Готово"),
-                          //Text((countProcess/countProcess).toString()),
-                        ],
-                      );
-                    }
-                    return SizedBox.shrink();
-                  },
-                )
+    return GestureDetector(
+      onTap: () {
+        showBottomSheet(
+           context: context,
+          builder: (context) {
+            return Container(
+              child: Column(
+                children: [
+                  
+                ],
               ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  height: 40,
-                  width: 60,
-                  color: Colors.amber,
-                ),
-              )
-            ],
+            );
+          },
+        );
+      },
+      onHorizontalDragStart: (d) => _dragStartX = d.localPosition.dx,
+      onHorizontalDragUpdate: (d) {
+        if(!widget.enabled){
+          return;
+        }
+        final delta = _dragStartX - d.localPosition.dx;   // вправо->0, влево->+
+        if (delta > 0) {
+          _ctrl.value = (delta / 120).clamp(0, 1);
+          setState(() {
+            
+          });
+        }
+      },
+      onHorizontalDragEnd: (d) async{
+        if(!widget.enabled){
+          return;
+        }
+        log(_ctrl.value.toString());
+        if (_ctrl.value > 0.8) {
+          
+          await widget.dissmisible();
+          _ctrl.animateTo(0);
+        } else {
+          // Отпустили раньше – возвращаем назад
+          _ctrl.animateBack(0);
+        }
+      },
+      child: Stack(
+        alignment: Alignment.centerRight,
+        children: [
+          
+          // Positioned.fill(
+          //   child: AnimatedBuilder(
+          //     animation: _ctrl,
+          //     builder: (ctx, _){
+          //      return LayoutBuilder(
+          //        builder: (context, constraints) {
+          //         final maxWidth = constraints.maxWidth;
+          //         final maxHeight = constraints.maxHeight;
+                  
+          //          return Transform.translate(
+          //             offset: Offset(maxWidth-_ctrl.value*120, 0),
+          //             child: SizedBox(
+          //               width: widget.maxOffset,
+          //               child: widget.action,
+          //             ),
+          //           );
+          //        }
+          //      );
+          //     }
+          //   ),
+          // ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth;
+              final maxHeight = constraints.maxHeight;
+              
+                return SizedBox(
+                  width: widget.maxOffset,
+                  child: widget.action,
+                );
+              }
+            )
           ),
-        ),
+          AnimatedBuilder(
+            animation: _ctrl,
+            builder: (ctx, _) => Transform.translate(
+              offset: Offset(-_ctrl.value * 120, 0),
+              child: ColoredBox(
+                color: Colors.white,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: widget.child,
+                ),
+              ),
+            ),
+          ),
+          
+        ],
       ),
     );
   }

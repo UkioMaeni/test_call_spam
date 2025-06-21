@@ -19,7 +19,7 @@ import androidx.work.*
 private const val CHANNEL = "my_native_plugin"
 private const val REQUEST_CODE_ROLE = 321
 
-class MyNativePlugin : FlutterPlugin,
+class AntispamPlugin : FlutterPlugin,
     MethodChannel.MethodCallHandler,
     ActivityAware,
     PluginRegistry.ActivityResultListener,
@@ -65,26 +65,47 @@ class MyNativePlugin : FlutterPlugin,
     /* ---------- MethodChannel ---------- */
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "isCallScreeningRoleHeld" -> isRoleHeld(result)
-            "requestCallScreeningRole" -> requestRole(result)
+            "isCallScreeningRoleHeld" -> isRoleHeld(result)//
+            "requestCallScreeningRole" -> requestRole(result)//
 
             "countSpamNumbers"        -> countSpamNumbers(call, result)
             "insertSpamNumbers"        -> insertSpamNumbers(call, result)
             "clearSpamDatabase"        -> clearSpamDatabase(result)
             "getSpamNumberCount"      ->    getSpamNumberCount(result)
             
-            "insertSpamCustomNumbers"  -> insertSpamCustomNumbers(call, result)
-            "selectDatabaseCustomNumbers"-> selectDatabaseCustomNumbers(result)
-            "deleteDatabaseCustomNumbers"-> deleteDatabaseCustomNumbers(result)
-            "deleteCustomNumbersByNumber"-> deleteCustomNumbersByNumber(call, result)
+            "insertSpamCustomNumbers"  -> insertSpamCustomNumbers(call, result)//
+            "selectDatabaseCustomNumbers"-> selectDatabaseCustomNumbers(result)//
+            "deleteDatabaseCustomNumbers"-> deleteDatabaseCustomNumbers(result)//
+            "deleteCustomNumbersByNumber"-> deleteCustomNumbersByNumber(call, result)//
 
-            "setCallBlockingEnabled"   -> setCallBlockingEnabled(call, result)
-            "getCallBlockingEnabled"   -> getCallBlockingEnabled(call, result)
-            "isCallBlockingEnabled"    -> result.success(SpamPrefs.isBlockingEnabled(appContext))
+            "setCallBlockingEnabled"   -> setCallBlockingEnabled(call, result)//
+            "getCallBlockingEnabled"   -> getCallBlockingEnabled(call, result)///
+            "isCallBlockingEnabled"    -> result.success(SpamPrefs.isBlockingEnabled(appContext))//
 
-            "updateDb"                -> updateDb(call, result)
+            "updateDb"                      -> updateDb(call, result)
+            "updateDbISRunning"              -> updateDbISRunning(call, result)
             "getCallLog"                -> getCallLog(call, result)
+
+            //проверки блок 
+            "getDescriptionFromAllScam"          ->getDescriptionFromAllScam(call, result)
+            "insertAllow"          ->insertAllow(call, result)//
+            "deleteAllow"          ->deleteAllow(call, result)//
+            "getAllow"          ->getAllow(result)//
             else                       -> result.notImplemented()
+        }
+    }
+
+    private fun getDescriptionFromAllScam(call: MethodCall,result: MethodChannel.Result){
+        val number: String? = call.argument<String>("number")
+
+        if (number.isNullOrBlank()) {          // аргумент не пришёл
+            result.success(null)
+            return
+        }
+
+        launch(Dispatchers.IO) {
+            val findAnyDescription =  dao.findDescription(number) ?: dao.findCustomDescription(number);
+            withContext(Dispatchers.Main) { result.success(findAnyDescription) }
         }
     }
 
@@ -99,10 +120,10 @@ class MyNativePlugin : FlutterPlugin,
                 val desc = m["description"] ?: ""
                 SpamCustomNumber(number, desc)
             }
-        }.toTypedArray()
+        }
         Log.d("DatabaseDebug", "Преобразованные сущности для вставки: ${entities.joinToString()}")
         launch(Dispatchers.IO) {
-            dao.insertAllCustomNumber(*entities)
+            dao.insertCustomTrans(entities[0])
             withContext(Dispatchers.Main) { result.success(true) }
         }
     }
@@ -263,7 +284,10 @@ class MyNativePlugin : FlutterPlugin,
 
 
     private fun updateDb(call: MethodCall, result: MethodChannel.Result) {
+
+
         val req = OneTimeWorkRequestBuilder<DbStreamWorker>()
+                    .addTag("db_stream_worker") 
                     .setConstraints(
                         Constraints.Builder()
                             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -275,6 +299,73 @@ class MyNativePlugin : FlutterPlugin,
                                        ExistingWorkPolicy.REPLACE, req)
                 result.success(true)
     }
+    private fun updateDbISRunning(call: MethodCall, result: MethodChannel.Result) {
+        launch(Dispatchers.IO) {
+            val list = WorkManager.getInstance(appContext)
+            .getWorkInfosForUniqueWork("spam-db-update")   // или .getWorkInfosByTag(TAG)
+            .await()
+            val isRunning = list.any { it.state == WorkInfo.State.RUNNING }
+
+            withContext(Dispatchers.Main) {
+                result.success(isRunning)            
+            }
+                
+        }
+        
+    }
+    private fun insertAllow(call: MethodCall, result: MethodChannel.Result) {
+        val raw = call.argument<Map<String, Any?>>("number")
+
+        if (raw == null) {
+            Log.e("insertAllow", "Номер для удаления не был предоставлен.")
+            result.success(false)
+            return
+        }
+
+         val number = raw["number"] as? String ?: ""
+         val description = raw["description"] as? String ?: ""
+
+        val allow =  AllowNumber(
+                number    = number,
+                description = description
+            )
+        launch(Dispatchers.IO) {
+            dao.insertAllowTrans(allow)
+            withContext(Dispatchers.Main) { 
+                Log.d("DatabaseDebug", "Номер $number успешно добавлен.")
+                result.success(true) 
+            }
+        } 
+    }
+    private fun deleteAllow(call: MethodCall, result: MethodChannel.Result) {
+        val number = call.argument<String>("number")
+        if(number==null){
+            result.success(false)
+            return
+        }
+        launch(Dispatchers.IO) {
+            dao.deleteAllow(number)
+            withContext(Dispatchers.Main) { result.success(true) }
+        }
+    }
+
+    private fun getAllow(result: MethodChannel.Result){
+        launch(Dispatchers.IO) {
+            val rows = dao.getAllow()
+            Log.d("DatabaseDebug", "Полученные строки из БД: $rows")
+            // Переводим в формат, который StandardMessageCodec понимает
+            val wire = rows.map { e ->
+                mapOf(
+                    "number"      to e.number,
+                    "description" to e.description
+                )
+            }
+            Log.d("DatabaseDebug", "Данные в формате wire: $wire")
+            withContext(Dispatchers.Main) { result.success(wire) }
+        }
+    }
+
+
     private fun getCallLog(call: MethodCall, result: MethodChannel.Result) {
         val limit = call.argument<Int?>("limit") ?: 50
         val log   = CallLogService.getCallLog(appContext, limit)

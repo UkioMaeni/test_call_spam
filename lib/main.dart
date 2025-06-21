@@ -7,7 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:my_native_plugin/my_native_plugin.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:test_call_spam/call.dart';
+import 'package:test_call_spam/allow_list_page.dart';
+import 'package:test_call_spam/block_list_page.dart';
 import 'package:test_call_spam/call_juranal_page.dart';
 import 'package:test_call_spam/db_dounload.dart';
 import 'package:test_call_spam/service/spam_service.dart';
@@ -103,6 +104,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
+  download()async{
+    Navigator.pop(context);
+    await plagin.updateDb();
+  }
+
+
   bool isToogleProcess=false;
 
   void toggleSpam()async{
@@ -123,6 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         }
       }else{
+
         final isRolled =  await SpamService().isCallScreeningRoleHeld();
         log(isRolled.toString());
         if(!isRolled){
@@ -132,6 +140,39 @@ class _MyHomePageState extends State<MyHomePage> {
         final isRolledCheck =  await SpamService().isCallScreeningRoleHeld();
         log(isRolledCheck.toString());
         if(isRolledCheck){
+          
+          final countNew =  await plagin.getSpamNumberCount();
+          if(countNew==0){
+            return showDialog(
+              context: context,
+              builder: (context) {
+                return Dialog(
+                  child: Container(
+                    height: 80,
+                    child: Column(
+                      children: [
+                        Text("dowwload db"),
+                        GestureDetector(
+                          onTap: download,
+                          child: Container(
+                            height: 50,
+                            width: 80,
+                            color: Colors.red,
+                            child: Text("dowwload"),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }else{
+            final updateDbISRunning =  await plagin.updateDbISRunning();
+            if(updateDbISRunning!=null && updateDbISRunning){
+              return;
+            }
+          }
           await plagin.setEnableBlocking(true);
           if(mounted){
             setState(() {
@@ -437,7 +478,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(height: 8,),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => CallPage(),));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => BlockListPage(),));
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -448,7 +489,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Allow list',
+                          'Blocked list',
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -463,7 +504,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(height: 8,),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => DbDownloadPage(),));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => AllowListPage(),));
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -474,7 +515,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'DbDownloadPage',
+                          'Allow list',
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,

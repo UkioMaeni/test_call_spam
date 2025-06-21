@@ -1,3 +1,4 @@
+import 'package:my_native_plugin/models/jurnal_number.dart';
 import 'package:my_native_plugin/models/spam_number.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -68,7 +69,22 @@ abstract class MyNativePluginPlatform extends PlatformInterface {
   Future<bool?> updateDb(){
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
-  Future<bool?> getCallLog(){
+  Future<List<JurnalNumber>> getCallLog(){
+    throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+  Future<String?> getDescriptionFromAllScam(String number){
+    throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+  Future<bool?> updateDbISRunning(){
+    throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+  Future<bool?> insertAllow(SpamNumber spamNumber){
+    throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+  Future<bool?> deleteAllow(String number){
+    throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+  Future<List<Map<String,dynamic>>?> getAllow()async{
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

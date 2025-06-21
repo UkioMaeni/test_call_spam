@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:my_native_plugin/models/jurnal_number.dart';
 import 'package:my_native_plugin/models/spam_number.dart';
 import 'package:my_native_plugin/my_native_plugin.dart';
 
@@ -12,11 +13,21 @@ class SpamService{
     final result =  await plagin.updateDb();
     return result;
   }
-  Future<bool?> getCallLog()async{
+  Future<bool?> updateDbISRunning()async{
+    final result =  await plagin.updateDbISRunning();
+    return result;
+  }
+
+
+
+  Future<List<JurnalNumber>> getCallLog()async{
     final result =  await plagin.getCallLog();
     return result;
   }
-  
+  Future<String?> getDescriptionFromAllScam(String number)async{
+    final result =  await plagin.getDescriptionFromAllScam(number);
+    return result;
+  }
 
   Future<bool?> requestCallSucurePage()async{
     final result =  await plagin.requestCallSucurePage();
@@ -147,6 +158,16 @@ class SpamService{
     }
     await batchLoad(counter+1,last);
   }
+  Future<bool> insertAllow(SpamNumber number)async{
+    return await plagin.insertAllow(number);
+  }
+  Future<List<SpamNumber>> getAllow()async{
+    return await plagin.getAllow();
+  }
+  Future<bool> deleteAllow(String number)async{
+    return await plagin.deleteAllow(number);
+  }
+  
 
 }
 

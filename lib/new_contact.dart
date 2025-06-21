@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:my_native_plugin/models/spam_number.dart';
 import 'package:test_call_spam/service/spam_service.dart';
 
+enum NewContactType{
+  allow,custom
+}
+
 class NewContact extends StatefulWidget {
+  final NewContactType type;
   final Function() onChange;
-  const NewContact({super.key,required this.onChange});
+  const NewContact({super.key,required this.onChange,required this.type});
 
   @override
   State<NewContact> createState() => _NewContactState();
@@ -23,17 +28,31 @@ class _NewContactState extends State<NewContact> {
     super.dispose();
   }
 
-  addSpamNumber()async{
-    final result =  await SpamService().insertSpamCustomNumbers([SpamNumber(number: numberController.text, description: cause.text,id: 0)]);
-    if(result){
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Успешно"),duration: Duration(seconds: 3),));
-      numberController.text="";
-      cause.text="";
-      setState(() {
-        
-      });
-      widget.onChange();
+  addNumber()async{
+    if(widget.type==NewContactType.custom){
+      final result =  await SpamService().insertSpamCustomNumbers([SpamNumber(number: numberController.text, description: cause.text,id: 0)]);
+      if(result){
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Успешно"),duration: Duration(seconds: 3),));
+        numberController.text="";
+        cause.text="";
+        setState(() {
+          
+        });
+        widget.onChange();
+      }
+    }else{
+       final result =  await SpamService().insertAllow(SpamNumber(number: numberController.text, description: cause.text,id: 0));
+      if(result){
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Успешно"),duration: Duration(seconds: 3),));
+        numberController.text="";
+        cause.text="";
+        setState(() {
+          
+        });
+        widget.onChange();
+      }
     }
+    
   }
 
   @override
@@ -77,7 +96,7 @@ class _NewContactState extends State<NewContact> {
             GestureDetector(
               onTap: () {
                 
-                addSpamNumber();
+                addNumber();
               },
               child: Container(
                 height: 80,

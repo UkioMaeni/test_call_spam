@@ -39,6 +39,8 @@ dependencies:
     path: ./plugins/my_native_plugin
   dio: ^5.8.0+1
   permission_handler: ^11.3.1
+  skeletonizer: ^1.4.3
+  flutter_slidable: ^3.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

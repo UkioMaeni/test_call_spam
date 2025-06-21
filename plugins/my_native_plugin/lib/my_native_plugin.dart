@@ -1,4 +1,5 @@
 
+import 'package:my_native_plugin/models/jurnal_number.dart';
 import 'package:my_native_plugin/models/spam_number.dart';
 
 import 'my_native_plugin_platform_interface.dart';
@@ -50,8 +51,28 @@ class MyNativePlugin {
   Future<bool?> updateDb()async {
     return await MyNativePluginPlatform.instance.updateDb();
   }
-  Future<bool?> getCallLog()async {
+  Future<List<JurnalNumber>> getCallLog()async {
     return await MyNativePluginPlatform.instance.getCallLog();
   }
-  
+  Future<String?> getDescriptionFromAllScam(String number)async {
+    return await MyNativePluginPlatform.instance.getDescriptionFromAllScam(number);
+  }
+  Future<bool?> updateDbISRunning()async {
+    return await MyNativePluginPlatform.instance.updateDbISRunning();
+  }
+  Future<bool> insertAllow(SpamNumber spamNumber)async{
+    final result = await MyNativePluginPlatform.instance.insertAllow(spamNumber);
+    return result??false;
+  }
+  Future<bool> deleteAllow(String number)async{
+    final result = await MyNativePluginPlatform.instance.deleteAllow(number);
+    return result??false;
+  }
+  Future<List<SpamNumber>> getAllow()async{
+    final result = await MyNativePluginPlatform.instance.getAllow();
+    if(result==null){
+      return [];
+    }
+    return result.map((e) => SpamNumber(number: e["number"], description: e["description"], id: 0)).toList();
+  }
 }
