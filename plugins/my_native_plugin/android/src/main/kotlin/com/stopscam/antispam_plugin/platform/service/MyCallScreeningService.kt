@@ -1,9 +1,15 @@
 package com.yourcompany.my_native_plugin
 
+import android.os.Build
 import android.telecom.Call
 import android.telecom.CallScreeningService
 import android.util.Log
+import androidx.annotation.RequiresApi
+import com.stopscam.antispam_plugin.data.local.db.AppDatabase
+import com.stopscam.antispam_plugin.data.local.entity.SpamCustomNumber
+import com.stopscam.antispam_plugin.data.local.entity.SpamNumber
 import com.stopscam.antispam_plugin.data.local.prefs.SpamPrefs
+import com.stopscam.antispam_plugin.platform.ServiceLocator
 import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URL
@@ -13,12 +19,24 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
+@RequiresApi(Build.VERSION_CODES.N)
 class MyCallScreeningService :
     CallScreeningService(),
     CoroutineScope by MainScope() {
 
-    private val dao by lazy {
-        AppDatabase.getInstance(applicationContext).spamDao()
+    private val spamNumberDao by lazy {
+        AppDatabase.getInstance(applicationContext).spamNumberDao()
+    }
+    private val spamCustomNumberDao by lazy {
+        AppDatabase.getInstance(applicationContext).spamCustomNumberDao()
+    }
+
+    private val allowNumberDao by lazy {
+        AppDatabase.getInstance(applicationContext).allowNumberDao()
+    }
+
+    private val customNumberOperations by lazy {
+        AppDatabase.getInstance(applicationContext).customNumberOperations()
     }
 
     override fun onDestroy() {
@@ -26,6 +44,7 @@ class MyCallScreeningService :
         super.onDestroy()
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onScreenCall(callDetails: Call.Details) {
         if (callDetails.callDirection != Call.Details.DIRECTION_INCOMING) return
         val handle = callDetails.handle;
@@ -47,14 +66,14 @@ class MyCallScreeningService :
             // 1. HTTP-лог (IO-поток)
             sendHttpLog(phone)
             // 2. Если фильтр выключен — сразу разрешаем
-            Log.d("isBlockingEnabled", SpamPrefs.isBlockingEnabled(applicationContext).toString())
-            if (!SpamPrefs.isBlockingEnabled(applicationContext)) {
+            Log.d("isBlockingEnabled", ServiceLocator.prefs.isBlockingEnabled().toString())
+            if (!ServiceLocator.prefs.isBlockingEnabled()) {
                 withContext(Dispatchers.Main) {
                     respondToCall(callDetails, CallResponse.Builder().build())
                 }
                 return@launch
             }
-            var isAllow = dao.existAllow(numbers)
+            var isAllow = allowNumberDao.isInAllowNumberFromList(numbers)
             if(isAllow){
                 withContext(Dispatchers.Main) {
                     respondToCall(callDetails, CallResponse.Builder().build())
@@ -62,7 +81,7 @@ class MyCallScreeningService :
                 return@launch
             }
             // 3. Проверка БД
-            var isSpam = dao.isSpamAllTables(numbers)
+            var isSpam = customNumberOperations.isSpamAllTables(numbers)
 
             var isSpamOnRemote = false;
 
@@ -76,13 +95,12 @@ class MyCallScreeningService :
                 val (remoteBlock, descr) = remoteBlockAsync.await()
                 if(remoteBlock){
                     isSpamOnRemote=true;
-                    val scumNumber = listOf(
-                        SpamCustomNumber(
-                            number      = phone,
-                            description = descr ?: "not"
-                        )
+                    val scumNumber = SpamNumber(
+                        number      = phone,
+                        description = descr ?: "not",
+                        serverId = 0
                     )
-                    dao.insertAllCustomNumber(scumNumber)
+                    spamNumberDao.spamNumberInsert(scumNumber)
                 }
                 
             }

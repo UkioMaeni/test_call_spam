@@ -13,6 +13,9 @@ interface  SpamNumberDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun spamNumberInsertAll(numbers: List<SpamNumber>)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun spamNumberInsert(number: SpamNumber)
+
     @Query("SELECT description FROM SpamNumber WHERE number = :number LIMIT 1")
     suspend fun spamNumberFindDescription(number: String): String?
 }

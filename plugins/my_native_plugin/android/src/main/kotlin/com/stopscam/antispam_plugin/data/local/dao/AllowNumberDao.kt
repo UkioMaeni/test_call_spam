@@ -19,6 +19,11 @@ interface  AllowNumberDao {
     @Query("SELECT EXISTS(SELECT 1 FROM AllowNumber WHERE number = :phoneNumber)")
     suspend fun isInAllowNumber(phoneNumber: String): Boolean
 
+    @Query("SELECT EXISTS(SELECT 1 FROM AllowNumber WHERE number IN (:numbers))")
+    suspend fun isInAllowNumberFromList(numbers: List<String>): Boolean
+
     @Query("SELECT * FROM AllowNumber")
     suspend fun allowNumberGetAll(): List<AllowNumber>
+
+
 }
