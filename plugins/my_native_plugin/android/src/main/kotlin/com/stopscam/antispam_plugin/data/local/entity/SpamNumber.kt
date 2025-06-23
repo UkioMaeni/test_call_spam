@@ -10,4 +10,10 @@ data class SpamNumber(
     @PrimaryKey val number: String,
     val description: String,
     val serverId: Int,
-)
+){
+    fun toEntity() = SpamNumber(
+        serverId    = serverId,
+        number      = number,
+        description = description
+    )
+}

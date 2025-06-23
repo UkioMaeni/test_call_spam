@@ -8,6 +8,7 @@ import com.stopscam.antispam_plugin.data.local.dao.AllowNumberDao
 import com.stopscam.antispam_plugin.data.local.dao.CustomNumberOperations
 import com.stopscam.antispam_plugin.data.local.dao.SpamCustomNumberDao
 import com.stopscam.antispam_plugin.data.local.dao.SpamDao
+import com.stopscam.antispam_plugin.data.local.dao.SpamNumberDao
 import com.stopscam.antispam_plugin.data.local.entity.AllowNumber
 import com.stopscam.antispam_plugin.data.local.entity.SpamCustomNumber
 import com.stopscam.antispam_plugin.data.local.entity.SpamNumber
@@ -23,6 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun spamCustomNumberDao(): SpamCustomNumberDao
     abstract fun allowNumberDao(): AllowNumberDao
     abstract fun customNumberOperations(): CustomNumberOperations
+    abstract  fun spamNumberDao(): SpamNumberDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null

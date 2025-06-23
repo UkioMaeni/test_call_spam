@@ -19,14 +19,20 @@ class ScamCustomNumberGetAllHandler(
 
     override val callMethod : String = CallMethods.CUSTOM_NUMBER_GET_ALL;
 
-    override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
+    override fun handler(call: MethodCall, result: MethodChannel.Result){
 
         scope.launch{
-            var inserted: Boolean;
+            var selected: List<SpamCustomNumber>;
             withContext(Dispatchers.IO) {
-                inserted = DbCase.insertCustomNumber(spamCustomNumber)
+                selected = DbCase.selectCustomNumber();
             }
-            result.success(inserted)
+            val wire = selected.map { e ->
+                mapOf(
+                    "number"      to e.number,
+                    "description" to e.description
+                )
+            }
+            result.success(wire)
         }
     }
 }

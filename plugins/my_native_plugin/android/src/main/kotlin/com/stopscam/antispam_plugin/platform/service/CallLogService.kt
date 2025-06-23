@@ -2,8 +2,10 @@ package com.yourcompany.my_native_plugin
 
 import android.net.Uri
 import android.content.Context
+import android.os.Build
 import android.provider.CallLog
 import androidx.annotation.Keep
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 
 /**
@@ -21,6 +23,7 @@ object CallLogService {
      * @param context  `applicationContext` или любой Context.
      * @param limit    сколько строк нужно (по-умолчанию – 50).
      */
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     @RequiresPermission(android.Manifest.permission.READ_CALL_LOG)
     fun getCallLog(context: Context, limit: Int = 50): List<Map<String, Any?>> {
         val projection = arrayOf(

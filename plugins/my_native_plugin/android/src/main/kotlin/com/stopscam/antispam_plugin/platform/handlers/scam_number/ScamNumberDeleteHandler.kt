@@ -11,14 +11,8 @@ class ScamNumberDeleteHandler : Handler {
 
     override val callMethod : String = CallMethods.CUSTOM_NUMBER_DELETE;
 
-    override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
-        val meta :LocationServiceMeta = LocationService.getMeta(context)
-        val map = mapOf(
-            "tickerSeconds" to meta.tickerSeconds,
-            "tickersCount"   to meta.tickersCount,
-            "hash"          to meta.hash,
-            "orderId"       to meta.orderId
-        )
-        result.success(map)
+    override fun handler(call: MethodCall, result: MethodChannel.Result){
+
+        result.success(null)
     }
 }

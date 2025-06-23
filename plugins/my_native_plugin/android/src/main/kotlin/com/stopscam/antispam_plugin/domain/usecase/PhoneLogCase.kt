@@ -5,8 +5,8 @@ import com.stopscam.antispam_plugin.data.local.entity.AllowNumber
 import com.stopscam.antispam_plugin.data.local.entity.SpamCustomNumber
 import com.stopscam.antispam_plugin.platform.ServiceLocator
 
-object PhoneLog {
-    suspend fun getCallsLog(number: SpamCustomNumber): Any? {
+object PhoneLogCase {
+    suspend fun getCallsLog(): Any? {
         try {
             val result =  ServiceLocator.phoneLogGateway.getCallsLog()
             return result;
@@ -15,7 +15,7 @@ object PhoneLog {
             return null;
         }
     }
-    suspend fun getSMSLog(number: AllowNumber): Any? {
+    suspend fun getSMSLog(): Any? {
         try {
             val result =  ServiceLocator.phoneLogGateway.getSMSLog()
             return result;

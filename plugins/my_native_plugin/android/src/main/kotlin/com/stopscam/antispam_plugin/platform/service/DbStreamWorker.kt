@@ -1,4 +1,4 @@
-package com.yourcompany.my_native_plugin
+package com.stopscam.antispam_plugin.platform.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,18 +15,18 @@ import kotlinx.coroutines.withContext
 import java.util.zip.GZIPInputStream
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.ResponseBody
 
 /* JSON */
 import com.google.gson.Gson
 
-import android.app.Service
-import androidx.core.app.ServiceCompat
 import android.content.pm.ServiceInfo
+import com.stopscam.antispam_plugin.data.local.db.AppDatabase
+import com.stopscam.antispam_plugin.data.local.entity.SpamNumber
+
 class DbStreamWorker(appContext: Context, params: WorkerParameters)
     : CoroutineWorker(appContext, params) {
 
-    private val dao = AppDatabase.getInstance(appContext).spamDao()
+    private val dao = AppDatabase.getInstance(appContext).spamNumberDao()
     private val NOTIF_ID = 42
     private val CHANNEL  = "spam_update"
 
@@ -52,21 +52,20 @@ class DbStreamWorker(appContext: Context, params: WorkerParameters)
 
             while (true) {
                 val line = reader.readLine() ?: break          // ← блокирующее чтение
-                val dto  = gson.fromJson(line, SpamNumberDTO::class.java)
+                val dto  = gson.fromJson(line, SpamNumber::class.java)
                 batch.add(dto.toEntity())
 
                 if (batch.size >= BATCH) {
-                    dao.insertAll(batch)                       // теперь можно
+                    dao.spamNumberInsertAll(batch)                       // теперь можно
                     count += batch.size
                     updateNotif(count)
                     batch.clear()
                 }
             }
             if (batch.isNotEmpty()) {
-                dao.insertAll(batch)
+                dao.spamNumberInsertAll(batch)
                 count += batch.size
                 updateNotif(count)
-
             }
             Result.success()
         } catch (e: Exception) {

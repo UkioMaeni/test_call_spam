@@ -16,16 +16,8 @@ class ScamNumberInsertHandler(
 
     override val callMethod : String = CallMethods.CUSTOM_NUMBER_INSERT;
 
-    override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
-        val number = call.argument<Map<String, String>>("number")
-        if(number==null){
-            result.error(false)
-        }
+    override fun handler(call: MethodCall, result: MethodChannel.Result){
 
-        scope.launch(Dispatchers.IO) {
-            dao.insertCustomTrans(entities[0])
-            withContext(Dispatchers.Main) { result.success(true) }
-        }
-        result.success(map)
+        result.success(null)
     }
 }

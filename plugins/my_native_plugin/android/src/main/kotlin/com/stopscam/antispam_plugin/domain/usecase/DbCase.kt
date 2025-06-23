@@ -1,10 +1,8 @@
 package com.stopscam.antispam_plugin.domain.usecase
 
-import android.os.Build
 import android.util.Log
 import com.stopscam.antispam_plugin.data.local.entity.AllowNumber
 import com.stopscam.antispam_plugin.data.local.entity.SpamCustomNumber
-import com.stopscam.antispam_plugin.domain.gateway.CallScreenGateway
 import com.stopscam.antispam_plugin.platform.ServiceLocator
 
 object DbCase{
@@ -27,22 +25,74 @@ object DbCase{
             return false;
         }
     }
-    suspend fun selectCustomNumber(number:AllowNumber):  List<SpamCustomNumber>{
+    suspend fun selectCustomNumber():  List<SpamCustomNumber>{
         try {
-             val result =  ServiceLocator.database.spamCustomNumberDao().spamCustomNumberGetAll()
+            val result = ServiceLocator.database.spamCustomNumberDao().spamCustomNumberGetAll()
             return result;
         }catch (e:Exception){
             Log.e("insertCustomNumber",e.toString())
             return listOf();
         }
     }
-    suspend fun selectAllowNumber(number:AllowNumber): Boolean{
+    suspend fun selectAllowNumber():  List<AllowNumber>{
         try {
-            ServiceLocator.database.allowNumberDao().allowNumberDelete(number)
+            val result = ServiceLocator.database.allowNumberDao().allowNumberGetAll()
+            return result;
+        }catch (e:Exception){
+            Log.e("insertCustomNumber",e.toString())
+            return listOf();
+        }
+    }
+    suspend fun deleteCustomNumber(number: String): Boolean{
+        try {
+            val result = ServiceLocator.database.spamCustomNumberDao().spamCustomNumberDelete(number)
             return true;
         }catch (e:Exception){
             Log.e("insertCustomNumber",e.toString())
             return false;
+        }
+    }
+    suspend fun deleteAllowNumber(number: String):  Boolean{
+        try {
+            val result = ServiceLocator.database.allowNumberDao().allowNumberDelete(number)
+            return true;
+        }catch (e:Exception){
+            Log.e("insertCustomNumber",e.toString())
+            return false;
+        }
+    }
+
+    suspend fun dbUpdaterIsRunning():  Boolean{
+        try {
+            val result = ServiceLocator.dbUpdaterGateway.isRunning()
+            return result;
+        }catch (e:Exception){
+            Log.e("insertCustomNumber",e.toString())
+            return false;
+        }
+    }
+
+    suspend fun startUpdate():  Boolean{
+        try {
+            if(dbUpdaterIsRunning()){
+                return false;
+            }
+            val result = ServiceLocator.dbUpdaterGateway.updateDb()
+            return result;
+        }catch (e:Exception){
+            Log.e("insertCustomNumber",e.toString())
+            return false;
+        }
+    }
+
+    suspend fun findDescription(number:String): String? {
+        try {
+            val findAnyDescription = ServiceLocator.database.spamNumberDao().spamNumberFindDescription(number) ?:
+                                         ServiceLocator.database.spamCustomNumberDao().spamCustomNumberFindDescription(number);
+            return findAnyDescription;
+        }catch (e:Exception){
+            Log.e("insertCustomNumber",e.toString())
+            return null;
         }
     }
 }

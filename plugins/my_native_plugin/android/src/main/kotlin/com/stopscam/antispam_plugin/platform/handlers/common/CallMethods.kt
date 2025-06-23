@@ -19,4 +19,9 @@ object CallMethods {
      //UpdateDb
     const val UPDATE_DB_STATUS = "UPDATE_DB_STATUS"
     const val UPDATE_DB_START  = "UPDATE_DB_START"
+
+    const val PHONE_LOG_CALLS = "PHONE_LOG_CALLS"
+    const val PHONE_LOG_SMS  = "PHONE_LOG_SMS"
+
+    const val DESCRIPTION_SCAM = "DESCRIPTION_SCAM"
 }

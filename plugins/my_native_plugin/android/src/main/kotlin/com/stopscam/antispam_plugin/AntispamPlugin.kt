@@ -15,9 +15,25 @@ import io.flutter.plugin.common.PluginRegistry
 import kotlinx.coroutines.*
 import android.util.Log
 import androidx.work.*
+import com.stopscam.antispam_plugin.data.local.prefs.SpamPrefs
 import com.stopscam.antispam_plugin.platform.ServiceLocator
 import com.stopscam.antispam_plugin.platform.gateway.CallScreenGatewayImpl
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.AllowNumberDeleteHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.AllowNumberGetAllHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.AllowNumberInsertHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.CallBlockSetStatusHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.CallBlockStatusHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.PhoneLogCallsHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.PhoneLogSMSHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.UpdateDBStartHandler
+import com.stopscam.antispam_plugin.platform.handlers.allow_number.UpdateDBStatusHandler
 import com.stopscam.antispam_plugin.platform.handlers.call_screen_role.CallScreenRoleRequestHandler
+import com.stopscam.antispam_plugin.platform.handlers.call_screen_role.CallScreenRoleStatusHandler
+import com.stopscam.antispam_plugin.platform.handlers.common.Handler
+import com.stopscam.antispam_plugin.platform.handlers.scam_custom_number.ScamCustomNumberDeleteHandler
+import com.stopscam.antispam_plugin.platform.handlers.scam_custom_number.ScamCustomNumberGetAllHandler
+import com.stopscam.antispam_plugin.platform.handlers.scam_custom_number.ScamCustomNumberInsertHandler
+import com.stopscam.antispam_plugin.platform.service.DbStreamWorker
 
 private const val CHANNEL = "my_native_plugin"
 private const val REQUEST_CODE_ROLE = 321
@@ -33,10 +49,28 @@ class AntispamPlugin : FlutterPlugin,
     private var pendingResult: MethodChannel.Result? = null
     private lateinit var appContext: Context
 
-    val handlers = listOf(
+    val handlers : List<Handler> = listOf(
+
+        AllowNumberDeleteHandler(this),
+        AllowNumberGetAllHandler(this),
+        AllowNumberInsertHandler(this),
+
+        ScamCustomNumberDeleteHandler(this),
+        ScamCustomNumberGetAllHandler(this),
+        ScamCustomNumberInsertHandler(this),
+
+        CallBlockSetStatusHandler(),
+        CallBlockStatusHandler(),
+
         CallScreenRoleRequestHandler(this),
-        AnotherFeatureHandler(this),
-        /* …другие handlers… */
+        CallScreenRoleStatusHandler(),
+
+        PhoneLogCallsHandler(this),
+        PhoneLogSMSHandler(this),
+
+        UpdateDBStartHandler(this),
+        UpdateDBStatusHandler(this),
+
     )
 
     // Room
@@ -74,7 +108,12 @@ class AntispamPlugin : FlutterPlugin,
     /* ---------- MethodChannel ---------- */
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
 
-        val handler = handlers.firstOrNull { it.method == call.method }
+        val handler = handlers.firstOrNull { it.callMethod == call.method }
+        if (handler != null) {
+            handler.handler(call, result)
+        } else {
+            result.notImplemented()
+        }
         when (call.method) {
             "isCallScreeningRoleHeld" -> isRoleHeld(result)///
             "requestCallScreeningRole" -> requestRole(result)///
@@ -84,24 +123,24 @@ class AntispamPlugin : FlutterPlugin,
             "clearSpamDatabase"        -> clearSpamDatabase(result)
             "getSpamNumberCount"      ->    getSpamNumberCount(result)
             
-            "insertSpamCustomNumbers"  -> insertSpamCustomNumbers(call, result)//
-            "selectDatabaseCustomNumbers"-> selectDatabaseCustomNumbers(result)//
-            "deleteDatabaseCustomNumbers"-> deleteDatabaseCustomNumbers(result)//
-            "deleteCustomNumbersByNumber"-> deleteCustomNumbersByNumber(call, result)//
+            "insertSpamCustomNumbers"  -> insertSpamCustomNumbers(call, result)///
+            "selectDatabaseCustomNumbers"-> selectDatabaseCustomNumbers(result)///
+            "deleteDatabaseCustomNumbers"-> deleteDatabaseCustomNumbers(result)//-
+            "deleteCustomNumbersByNumber"-> deleteCustomNumbersByNumber(call, result)///
 
-            "setCallBlockingEnabled"   -> setCallBlockingEnabled(call, result)//
-            "getCallBlockingEnabled"   -> getCallBlockingEnabled(call, result)//
-            "isCallBlockingEnabled"    -> result.success(SpamPrefs.isBlockingEnabled(appContext))//
+            "setCallBlockingEnabled"   -> setCallBlockingEnabled(call, result)///
+            "getCallBlockingEnabled"   -> getCallBlockingEnabled(call, result)///
+            "isCallBlockingEnabled"    -> result.success(SpamPrefs.isBlockingEnabled(appContext))///
 
-            "updateDb"                      -> updateDb(call, result)//
-            "updateDbISRunning"              -> updateDbISRunning(call, result)//
-            "getCallLog"                -> getCallLog(call, result)
+            "updateDb"                      -> updateDb(call, result)///
+            "updateDbISRunning"              -> updateDbISRunning(call, result)///
+            "getCallLog"                -> getCallLog(call, result)///
 
             //проверки блок 
             "getDescriptionFromAllScam"          ->getDescriptionFromAllScam(call, result)//
-            "insertAllow"          ->insertAllow(call, result)//
-            "deleteAllow"          ->deleteAllow(call, result)//
-            "getAllow"          ->getAllow(result)//
+            "insertAllow"          ->insertAllow(call, result)///
+            "deleteAllow"          ->deleteAllow(call, result)///
+            "getAllow"          ->getAllow(result)///
             else                       -> result.notImplemented()
         }
     }

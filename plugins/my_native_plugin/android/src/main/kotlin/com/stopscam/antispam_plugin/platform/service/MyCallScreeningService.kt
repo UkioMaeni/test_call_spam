@@ -3,6 +3,7 @@ package com.yourcompany.my_native_plugin
 import android.telecom.Call
 import android.telecom.CallScreeningService
 import android.util.Log
+import com.stopscam.antispam_plugin.data.local.prefs.SpamPrefs
 import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URL

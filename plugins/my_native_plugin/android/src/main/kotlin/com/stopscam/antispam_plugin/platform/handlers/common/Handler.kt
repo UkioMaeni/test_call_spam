@@ -6,6 +6,6 @@ import android.content.Context
 
 interface Handler {
     val callMethod:String;
-    fun handler(context: Context, call: MethodCall, result: MethodChannel.Result);
+    fun handler(call: MethodCall, result: MethodChannel.Result);
 }
 

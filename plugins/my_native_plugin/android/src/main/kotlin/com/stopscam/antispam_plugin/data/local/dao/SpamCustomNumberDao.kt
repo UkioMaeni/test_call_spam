@@ -33,4 +33,7 @@ interface  SpamCustomNumberDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM SpamCustomNumber WHERE number = :phoneNumber)")
     suspend fun isInSpamCustomNumber(phoneNumber: String): Boolean
+
+    @Query("SELECT description FROM SpamCustomNumber WHERE number = :number LIMIT 1")
+    suspend fun spamCustomNumberFindDescription(number: String): String?
 }

@@ -20,7 +20,7 @@ class AllowNumberInsertHandler(
 
     override val callMethod : String = CallMethods.ALLOW_NUMBER_INSERT;
 
-    override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
+    override fun handler(call: MethodCall, result: MethodChannel.Result){
         val number = call.argument<Map<String, String>>("number")
         if(number==null){
             result.error("INVALID_ARGUMENT", "Missing ‘number’ parameter", null)

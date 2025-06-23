@@ -11,7 +11,7 @@ class CallScreenRoleStatusHandler : Handler {
 
     override val callMethod : String = CallMethods.CALL_SCREEN_ROLE_STATUS;
 
-    override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
+    override fun handler(call: MethodCall, result: MethodChannel.Result){
         val granted = CallScreenRoleCase.isGranted()
         result.success(granted)
     }

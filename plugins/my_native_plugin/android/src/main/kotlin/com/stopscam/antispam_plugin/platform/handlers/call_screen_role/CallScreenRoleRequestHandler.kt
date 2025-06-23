@@ -17,7 +17,7 @@ class CallScreenRoleRequestHandler(
     override val callMethod : String = CallMethods.CALL_SCREEN_ROLE_REQUEST;
 
 
-    override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
+    override fun handler(call: MethodCall, result: MethodChannel.Result){
         scope.launch {
             val granted = CallScreenRoleCase.requestRole()
             result.success(granted)

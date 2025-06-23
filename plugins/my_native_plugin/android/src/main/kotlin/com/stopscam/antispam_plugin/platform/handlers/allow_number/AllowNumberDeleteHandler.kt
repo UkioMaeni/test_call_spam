@@ -3,22 +3,33 @@ package com.stopscam.antispam_plugin.platform.handlers.allow_number
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import android.content.Context
+import com.stopscam.antispam_plugin.domain.usecase.DbCase
 import com.stopscam.antispam_plugin.platform.handlers.common.CallMethods
 import com.stopscam.antispam_plugin.platform.handlers.common.Handler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class AllowNumberDeleteHandler : Handler {
+class AllowNumberDeleteHandler(
+    private val scope: CoroutineScope
+) : Handler {
 
 
     override val callMethod : String = CallMethods.ALLOW_NUMBER_DELETE;
 
-    override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
-        val meta :LocationServiceMeta = LocationService.getMeta(context)
-        val map = mapOf(
-            "tickerSeconds" to meta.tickerSeconds,
-            "tickersCount"   to meta.tickersCount,
-            "hash"          to meta.hash,
-            "orderId"       to meta.orderId
-        )
-        result.success(map)
+    override fun handler(call: MethodCall, result: MethodChannel.Result){
+        val number = call.argument<String>("number")
+        if(number==null){
+            result.success(false)
+            return;
+        }
+        scope.launch{
+            var deleted: Boolean;
+            withContext(Dispatchers.IO) {
+                deleted = DbCase.deleteCustomNumber(number);
+            }
+            result.success(deleted)
+        }
     }
 }

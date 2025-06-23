@@ -1,6 +1,7 @@
-package com.stopscam.antispam_plugin.dto
+package com.stopscam.antispam_plugin.data.remote.dto
 
 import androidx.annotation.Keep
+import com.stopscam.antispam_plugin.data.local.entity.SpamNumber
 
 @Keep
 data class SpamNumberDTO(
