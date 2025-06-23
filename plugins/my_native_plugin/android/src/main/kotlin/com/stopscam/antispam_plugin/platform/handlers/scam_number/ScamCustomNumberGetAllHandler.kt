@@ -6,7 +6,7 @@ import android.content.Context
 import com.stopscam.antispam_plugin.platform.handlers.common.CallMethods
 import com.stopscam.antispam_plugin.platform.handlers.common.Handler
 
-class ScamNumberGetAllHandler : Handler {
+class ScamCustomNumberGetAllHandler : Handler {
 
 
     override val callMethod : String = CallMethods.CUSTOM_NUMBER_GET_ALL;

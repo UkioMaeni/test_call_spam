@@ -14,7 +14,10 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
 import kotlinx.coroutines.*
 import android.util.Log
-import androidx.work.* 
+import androidx.work.*
+import com.stopscam.antispam_plugin.platform.ServiceLocator
+import com.stopscam.antispam_plugin.platform.gateway.CallScreenGatewayImpl
+import com.stopscam.antispam_plugin.platform.handlers.call_screen_role.CallScreenRoleRequestHandler
 
 private const val CHANNEL = "my_native_plugin"
 private const val REQUEST_CODE_ROLE = 321
@@ -30,6 +33,12 @@ class AntispamPlugin : FlutterPlugin,
     private var pendingResult: MethodChannel.Result? = null
     private lateinit var appContext: Context
 
+    val handlers = listOf(
+        CallScreenRoleRequestHandler(this),
+        AnotherFeatureHandler(this),
+        /* …другие handlers… */
+    )
+
     // Room
     private lateinit var db: AppDatabase
     @VisibleForTesting internal lateinit var dao: SpamDao   // тестам будет проще
@@ -41,10 +50,10 @@ class AntispamPlugin : FlutterPlugin,
 
         channel = MethodChannel(binding.binaryMessenger, CHANNEL)
         channel.setMethodCallHandler(this)
-
+        ServiceLocator.init(appContext);
         // Имеем applicationContext – создаём БД
-        db  = AppDatabase.getInstance(binding.applicationContext)
-        dao = db.spamDao()
+//        db  = AppDatabase.getInstance(binding.applicationContext)
+//        dao = db.spamDao()
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -54,19 +63,21 @@ class AntispamPlugin : FlutterPlugin,
 
     /* ---------- ActivityAware ---------- */
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        activity = binding.activity
+        ServiceLocator.activity=binding.activity
         binding.addActivityResultListener(this)
     }
-    override fun onDetachedFromActivity()                { activity = null }
+    override fun onDetachedFromActivity() { activity = null }
     override fun onReattachedToActivityForConfigChanges(b: ActivityPluginBinding) =
         onAttachedToActivity(b)
     override fun onDetachedFromActivityForConfigChanges() {}
 
     /* ---------- MethodChannel ---------- */
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+
+        val handler = handlers.firstOrNull { it.method == call.method }
         when (call.method) {
-            "isCallScreeningRoleHeld" -> isRoleHeld(result)//
-            "requestCallScreeningRole" -> requestRole(result)//
+            "isCallScreeningRoleHeld" -> isRoleHeld(result)///
+            "requestCallScreeningRole" -> requestRole(result)///
 
             "countSpamNumbers"        -> countSpamNumbers(call, result)
             "insertSpamNumbers"        -> insertSpamNumbers(call, result)
@@ -79,15 +90,15 @@ class AntispamPlugin : FlutterPlugin,
             "deleteCustomNumbersByNumber"-> deleteCustomNumbersByNumber(call, result)//
 
             "setCallBlockingEnabled"   -> setCallBlockingEnabled(call, result)//
-            "getCallBlockingEnabled"   -> getCallBlockingEnabled(call, result)///
+            "getCallBlockingEnabled"   -> getCallBlockingEnabled(call, result)//
             "isCallBlockingEnabled"    -> result.success(SpamPrefs.isBlockingEnabled(appContext))//
 
-            "updateDb"                      -> updateDb(call, result)
-            "updateDbISRunning"              -> updateDbISRunning(call, result)
+            "updateDb"                      -> updateDb(call, result)//
+            "updateDbISRunning"              -> updateDbISRunning(call, result)//
             "getCallLog"                -> getCallLog(call, result)
 
             //проверки блок 
-            "getDescriptionFromAllScam"          ->getDescriptionFromAllScam(call, result)
+            "getDescriptionFromAllScam"          ->getDescriptionFromAllScam(call, result)//
             "insertAllow"          ->insertAllow(call, result)//
             "deleteAllow"          ->deleteAllow(call, result)//
             "getAllow"          ->getAllow(result)//
@@ -276,10 +287,12 @@ class AntispamPlugin : FlutterPlugin,
 
     /* ---------- ActivityResultListener ---------- */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (requestCode != REQUEST_CODE_ROLE) return false
-        pendingResult?.success(resultCode == Activity.RESULT_OK)
-        pendingResult = null
-        return true
+        if (requestCode != CallScreenGatewayImpl.REQUEST_CODE_ROLE){
+            ServiceLocator.callScreenRoleGateway.handleActivityResult(resultCode)
+            val granted = (resultCode == Activity.RESULT_OK)
+            return  granted;
+        }
+        return false
     }
 
 

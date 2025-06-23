@@ -9,7 +9,7 @@ import com.stopscam.antispam_plugin.platform.handlers.common.Handler
 class UpdateDBStartHandler : Handler {
 
 
-    override val callMethod : String = CallMethods.CALL_SCREEN_ROLE_STATUS;
+    override val callMethod : String = CallMethods.UPDATE_DB_START;
 
     override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
         val meta :LocationServiceMeta = LocationService.getMeta(context)

@@ -1,4 +1,4 @@
-package com.ezride.flutter_bg_location_plugin.handlers
+package com.stopscam.antispam_plugin.platform.handlers.common
 
 object CallMethods {
 
@@ -16,4 +16,7 @@ object CallMethods {
     //CallBlock
     const val CALL_BLOCK_STATUS     = "CALL_BLOCK_STATUS"
     const val CALL_BLOCK_SET_STATUS = "CALL_BLOCK_SET_STATUS"
+     //UpdateDb
+    const val UPDATE_DB_STATUS = "UPDATE_DB_STATUS"
+    const val UPDATE_DB_START  = "UPDATE_DB_START"
 }
