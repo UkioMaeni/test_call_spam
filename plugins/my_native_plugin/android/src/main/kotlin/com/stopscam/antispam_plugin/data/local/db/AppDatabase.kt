@@ -4,18 +4,25 @@ import android.content.Context
 import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.stopscam.antispam_plugin.data.local.dao.AllowNumberDao
+import com.stopscam.antispam_plugin.data.local.dao.CustomNumberOperations
+import com.stopscam.antispam_plugin.data.local.dao.SpamCustomNumberDao
 import com.stopscam.antispam_plugin.data.local.dao.SpamDao
+import com.stopscam.antispam_plugin.data.local.entity.AllowNumber
+import com.stopscam.antispam_plugin.data.local.entity.SpamCustomNumber
 import com.stopscam.antispam_plugin.data.local.entity.SpamNumber
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 @Database(
-    entities = [SpamNumber::class, SpamCustomNumber::class,AllowNumber::class],
+    entities = [SpamNumber::class, SpamCustomNumber::class, AllowNumber::class],
     version = 6,
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun spamDao(): SpamDao
+    abstract fun spamCustomNumberDao(): SpamCustomNumberDao
+    abstract fun allowNumberDao(): AllowNumberDao
+    abstract fun customNumberOperations(): CustomNumberOperations
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null

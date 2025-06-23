@@ -5,6 +5,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.stopscam.antispam_plugin.data.local.entity.AllowNumber
+import com.stopscam.antispam_plugin.data.local.entity.SpamCustomNumber
+
 @Dao
 interface SpamDao {
     ///работа с основной базой базой

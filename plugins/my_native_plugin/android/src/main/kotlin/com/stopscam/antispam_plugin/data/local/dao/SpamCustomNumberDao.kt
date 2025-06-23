@@ -30,4 +30,7 @@ interface  SpamCustomNumberDao {
 
     @Query("SELECT * FROM SpamCustomNumber WHERE setBlocked = 1")
     suspend fun spamCustomNumberGetAll(): List<SpamCustomNumber>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM SpamCustomNumber WHERE number = :phoneNumber)")
+    suspend fun isInSpamCustomNumber(phoneNumber: String): Boolean
 }

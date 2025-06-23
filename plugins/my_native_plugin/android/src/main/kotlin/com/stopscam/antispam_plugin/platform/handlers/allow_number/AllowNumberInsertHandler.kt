@@ -3,22 +3,39 @@ package com.stopscam.antispam_plugin.platform.handlers.allow_number
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import android.content.Context
+import com.stopscam.antispam_plugin.data.local.entity.AllowNumber
+import com.stopscam.antispam_plugin.data.local.entity.SpamCustomNumber
+import com.stopscam.antispam_plugin.domain.usecase.DbCase
 import com.stopscam.antispam_plugin.platform.handlers.common.CallMethods
 import com.stopscam.antispam_plugin.platform.handlers.common.Handler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class AllowNumberInsertHandler : Handler {
+class AllowNumberInsertHandler(
+    private val scope: CoroutineScope
+) : Handler {
 
 
     override val callMethod : String = CallMethods.ALLOW_NUMBER_INSERT;
 
     override fun handler(context: Context, call: MethodCall, result: MethodChannel.Result){
-        val meta :LocationServiceMeta = LocationService.getMeta(context)
-        val map = mapOf(
-            "tickerSeconds" to meta.tickerSeconds,
-            "tickersCount"   to meta.tickersCount,
-            "hash"          to meta.hash,
-            "orderId"       to meta.orderId
+        val number = call.argument<Map<String, String>>("number")
+        if(number==null){
+            result.error("INVALID_ARGUMENT", "Missing ‘number’ parameter", null)
+            return;
+        }
+        val  spamCustomNumber  = AllowNumber(
+            number = number["number"]?:"",
+            description = number["number"]?:""
         )
-        result.success(map)
+        scope.launch{
+            var inserted: Boolean;
+            withContext(Dispatchers.IO) {
+                inserted = DbCase.insertAllowNumber(spamCustomNumber)
+            }
+            result.success(inserted)
+        }
     }
 }

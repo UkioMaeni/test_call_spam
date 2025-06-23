@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class CallScreenRoleRequestHandler(
     private val scope: CoroutineScope
-) : Handler,CoroutineScope by MainScope()  {
+) : Handler{
 
     override val callMethod : String = CallMethods.CALL_SCREEN_ROLE_REQUEST;
 

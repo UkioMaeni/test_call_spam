@@ -1,4 +1,4 @@
-package com.stopscam.antispam_plugin.platform.handlers.scam_number
+package com.stopscam.antispam_plugin.platform.handlers.scam_custom_number
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

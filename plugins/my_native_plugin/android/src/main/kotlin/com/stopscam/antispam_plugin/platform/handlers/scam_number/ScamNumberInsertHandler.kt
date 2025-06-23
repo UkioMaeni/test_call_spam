@@ -3,7 +3,6 @@ package com.stopscam.antispam_plugin.platform.handlers.scam_number
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import android.content.Context
-import android.util.Log
 import com.stopscam.antispam_plugin.platform.handlers.common.CallMethods
 import com.stopscam.antispam_plugin.platform.handlers.common.Handler
 import kotlinx.coroutines.CoroutineScope
